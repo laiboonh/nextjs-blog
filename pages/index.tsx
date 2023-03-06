@@ -5,6 +5,7 @@ import { getSortedPostsData } from "../lib/posts";
 import Link from "next/link";
 import Date from "../components/date";
 import { GetStaticProps } from "next";
+import LoginBtn from "../components/login-btn";
 
 export const getStaticProps: GetStaticProps = async (context) => {
   const allPostsData = getSortedPostsData();
@@ -30,6 +31,7 @@ export default function Home({
         <title>{siteTitle}</title>
       </Head>
       <section className={utilStyles.headingMd}>
+        <LoginBtn></LoginBtn>
         <p>[Your Self Introduction]</p>
         <p>
           (This is a sample website - you’ll be building a site like this on{" "}
