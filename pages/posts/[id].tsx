@@ -2,25 +2,33 @@ import Layout from "../../components/layout";
 import Head from "next/head";
 import Date from "../../components/date";
 import utilStyles from "../../styles/utils.module.css";
-import { getAllPostIds } from "../../lib/posts";
-import { getPostData } from "../../lib/posts";
-import { GetStaticProps, GetStaticPaths } from "next";
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  const paths = getAllPostIds();
-  return {
-    paths,
-    fallback: false,
-  };
-};
+import { prisma } from "../../lib/prisma";
+import matter from "gray-matter";
+import { remark } from "remark";
+import html from "remark-html";
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const postData = await getPostData(params.id);
-  return {
-    props: {
-      postData,
+export const getServerSideProps = async ({ params }) => {
+  const id = params.id;
+  let postData = await prisma.post.findUnique({
+    where: {
+      id: id,
     },
-  };
+  });
+
+  // Use gray-matter to parse the post metadata section
+  const matterResult = matter(postData.content);
+
+  // Use remark to convert markdown into HTML string
+  const processedContent = await remark()
+    .use(html)
+    .process(matterResult.content);
+  const contentHtml = processedContent.toString();
+
+  postData = { ...postData, ...{ content: contentHtml } };
+
+  postData = JSON.parse(JSON.stringify(postData));
+  return { props: { postData } };
 };
 
 export default function Post({
@@ -29,7 +37,7 @@ export default function Post({
   postData: {
     title: string;
     date: string;
-    contentHtml: string;
+    content: string;
   };
 }) {
   return (
@@ -42,7 +50,7 @@ export default function Post({
         <div className={utilStyles.lightText}>
           <Date dateString={postData.date} />
         </div>
-        <div dangerouslySetInnerHTML={{ __html: postData.contentHtml }} />
+        <div dangerouslySetInnerHTML={{ __html: postData.content }} />
       </article>
     </Layout>
   );
