@@ -1,19 +1,16 @@
 import Head from "next/head";
 import Layout, { siteTitle } from "../components/layout";
 import utilStyles from "../styles/utils.module.css";
-import { getSortedPostsData } from "../lib/posts";
 import Link from "next/link";
 import Date from "../components/date";
-import { GetStaticProps } from "next";
 import LoginBtn from "../components/login-btn";
+import { prisma } from "../lib/prisma";
 
-export const getStaticProps: GetStaticProps = async (context) => {
-  const allPostsData = getSortedPostsData();
-  return {
-    props: {
-      allPostsData,
-    },
-  };
+export const getServerSideProps = async ({ req }) => {
+  let allPostsData = await prisma.post.findMany({});
+  allPostsData = JSON.parse(JSON.stringify(allPostsData));
+
+  return { props: { allPostsData } };
 };
 
 export default function Home({
